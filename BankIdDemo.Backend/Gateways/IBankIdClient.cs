@@ -21,9 +21,17 @@ public record BankIdErrorResponse(string ErrorCode, string Details);
 
 public record ApiCollectResponse(string OrderRef, string Status, string? HintCode, ApiCompletionData? CompletionData);
 
-public record ApiCompletionData
-{
-}
+public record ApiCompletionData(
+    ApiUser User,
+    ApiDevice Device,
+    string BankIdIssueDate,
+    ApiStepUp StepUp,
+    string Signature,
+    string OcspResponse);
+
+public record ApiUser(string PersonalNumber, string Name, string GivenName, string Surname);
+public record ApiDevice(string IpAddress, string Uhi);
+public record ApiStepUp(bool Mrtd);
 
 public record ApiCollectRequest(string OrderRef);
 

@@ -7,7 +7,17 @@ public class BankIdApiHandler(ILogger<BankIdApiHandler> logger) : DelegatingHand
     {
         PreventUnsupportedMediaTypeError(request);
         await LogRequestContent(request, cancellationToken);
-        return await base.SendAsync(request, cancellationToken);
+        var response = await base.SendAsync(request, cancellationToken);
+        await LogResponseContent(request, response, cancellationToken);
+        return response;
+    }
+
+    private async Task LogResponseContent(HttpRequestMessage request, HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        await response.Content.LoadIntoBufferAsync();
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        logger.LogInformation("BankIdApiHandler response: {Method} {Uri} {Content}",
+            request.Method, request.RequestUri, content);
     }
 
     private async Task LogRequestContent(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -16,7 +26,7 @@ public class BankIdApiHandler(ILogger<BankIdApiHandler> logger) : DelegatingHand
         {
             await request.Content.LoadIntoBufferAsync();
             var content = await request.Content.ReadAsStringAsync(cancellationToken);
-            logger.LogInformation("BankIdApiHandler: {Method} {Uri} {Content}",
+            logger.LogInformation("BankIdApiHandler request: {Method} {Uri} {Content}",
                 request.Method, request.RequestUri, content);
         }
     }
