@@ -14,7 +14,10 @@ public interface IBankIdClient
     Task<ApiAuthResponse> Sign(ApiAuthRequest request);
 
     [Post("collect")]
-    Task<ApiCollectResponse> Collect(ApiCollectRequest request);
+    Task<ApiCollectResponse> Collect(ApiOrderRefRequest request);
+
+    [Post("cancel")]
+    Task Cancel(ApiOrderRefRequest request);
 }
 
 public record BankIdErrorResponse(string ErrorCode, string Details);
@@ -33,7 +36,7 @@ public record ApiUser(string PersonalNumber, string Name, string GivenName, stri
 public record ApiDevice(string IpAddress, string Uhi);
 public record ApiStepUp(bool Mrtd);
 
-public record ApiCollectRequest(string OrderRef);
+public record ApiOrderRefRequest(string OrderRef);
 
 public record ApiAuthRequirements(bool? PinCode);
 

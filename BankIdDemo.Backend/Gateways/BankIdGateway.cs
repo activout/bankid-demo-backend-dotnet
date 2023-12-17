@@ -1,3 +1,5 @@
+using Activout.RestClient;
+
 namespace BankIdDemo.Backend.Gateways;
 
 internal class BankIdGateway(IBankIdClient bankIdClient) : IBankIdGateway
@@ -16,7 +18,7 @@ internal class BankIdGateway(IBankIdClient bankIdClient) : IBankIdGateway
 
     public async Task<CollectResponse> Collect(string orderRef)
     {
-        var result = await bankIdClient.Collect(new ApiCollectRequest(orderRef));
+        var result = await bankIdClient.Collect(new ApiOrderRefRequest(orderRef));
         return new CollectResponse(result.OrderRef, ParseStatus(result.Status), ParseHintCode(result.HintCode),
             ParseCompletionData(result.CompletionData));
 
@@ -41,5 +43,17 @@ internal class BankIdGateway(IBankIdClient bankIdClient) : IBankIdGateway
             Enum.TryParse<BankIdStatus>(resultStatus, ignoreCase: true, out var status)
                 ? status
                 : BankIdStatus.Unknown;
+    }
+
+    public async Task Cancel(string orderRef)
+    {
+        try
+        {
+            await bankIdClient.Cancel(new ApiOrderRefRequest(orderRef));
+        }
+        catch (RestClientException)
+        {
+            // Ignore
+        }
     }
 }

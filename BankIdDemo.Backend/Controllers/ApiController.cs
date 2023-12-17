@@ -27,8 +27,17 @@ public class ApiController(IBankIdGateway bankIdGateway) : ControllerBase
 
     [HttpPost("collect")]
     [Produces<CollectResponse>]
-    public async Task<IActionResult> Collect([FromBody] CollectRequest request)
+    public async Task<IActionResult> Collect([FromBody] OrderRefRequest request)
     {
         return Ok(await bankIdGateway.Collect(request.OrderRef));
     }
+
+    [HttpPost("cancel")]
+    public async Task<IActionResult> Cancel([FromBody] OrderRefRequest request)
+    {
+        await bankIdGateway.Cancel(request.OrderRef);
+        return Ok(new object());
+    }
+
+    public record OrderRefRequest(string OrderRef);
 }

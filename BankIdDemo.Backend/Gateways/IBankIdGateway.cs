@@ -22,8 +22,6 @@ public record AuthResponse(
     string OrderRef,
     string AutoStartToken);
 
-public record CollectRequest(string OrderRef);
-
 public record User(string PersonalNumber, string Name, string GivenName, string Surname);
 
 public record Device(string IpAddress, string UniqueHardwareId);
@@ -51,4 +49,5 @@ public interface IBankIdGateway
     Task<AuthResponse> Sign(string endUserIp);
 
     Task<CollectResponse> Collect(string orderRef);
+    Task Cancel(string orderRef);
 }
