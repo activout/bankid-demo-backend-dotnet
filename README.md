@@ -7,3 +7,12 @@ Compatible Flutter app source code:
 
 - [ ] Make /collect create a login session and return a JWT
 - [ ] Add protected API that requires a valid JWT
+
+
+## Questions or support?
+
+Contact [david@activout.se](mailto:david@activout.se) to order a support package, starting at 20000 SEK or 1800 EUR or 2000 USD.
+
+## License
+
+[MIT License](LICENSE).
