@@ -9,7 +9,7 @@ Compatible Flutter app source code:
 - [ ] Add protected API that requires a valid JWT
 
 
-## Questions or support?
+## Need help implementing BankID?
 
 Contact [david@activout.se](mailto:david@activout.se) to order a support package, starting at 20000 SEK or 1800 EUR or 2000 USD.
 
