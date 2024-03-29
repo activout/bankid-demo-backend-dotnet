@@ -28,7 +28,7 @@ public record ApiCompletionData(
     ApiUser User,
     ApiDevice Device,
     string BankIdIssueDate,
-    ApiStepUp StepUp,
+    ApiStepUp? StepUp,
     string Signature,
     string OcspResponse);
 

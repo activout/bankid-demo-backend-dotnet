@@ -29,7 +29,7 @@ internal class BankIdGateway(IBankIdClient bankIdClient) : IBankIdGateway
                         resultCompletionData.User.GivenName, resultCompletionData.User.Surname),
                     new Device(resultCompletionData.Device.IpAddress, resultCompletionData.Device.Uhi),
                     resultCompletionData.BankIdIssueDate,
-                    new StepUp(resultCompletionData.StepUp.Mrtd),
+                    resultCompletionData.StepUp == null ?  null : new StepUp(resultCompletionData.StepUp.Mrtd),
                     resultCompletionData.Signature,
                     resultCompletionData.OcspResponse);
 

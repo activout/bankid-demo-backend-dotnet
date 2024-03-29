@@ -32,7 +32,7 @@ public record CompletionData(
     User User,
     Device Device,
     string BankIdIssueDate,
-    StepUp StepUp,
+    StepUp? StepUp,
     string Signature,
     string OcspResponse);
 
