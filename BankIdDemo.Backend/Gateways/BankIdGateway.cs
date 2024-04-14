@@ -12,7 +12,7 @@ internal class BankIdGateway(IBankIdClient bankIdClient) : IBankIdGateway
 
     public async Task<AuthResponse> Sign(string endUserIp)
     {
-        var result = await bankIdClient.Auth(new ApiAuthRequest(endUserIp));
+        var result = await bankIdClient.Sign(new ApiAuthRequest(endUserIp));
         return new AuthResponse(result.OrderRef, result.AutoStartToken);
     }
 
