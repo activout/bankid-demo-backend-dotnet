@@ -19,6 +19,11 @@ using JsonSerializer = Activout.RestClient.Serialization.Implementation.JsonSeri
 
 namespace BankIdDemo.Backend.Test;
 
+/// <summary>
+/// Tests for the BankIdGateway implementation using mock HTTP responses.
+/// This test suite validates the Swedish BankID API v6.0 integration through the IBankIdGateway interface,
+/// covering auth, sign, collect, and cancel operations with various response scenarios.
+/// </summary>
 public class BankIdGatewayTests
 {
     private const string BaseUri = "https://appapi2.test.bankid.com/rp/v6.0";
