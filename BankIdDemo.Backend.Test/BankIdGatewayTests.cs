@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http;
-using System.Text.Json;
 using Activout.RestClient;
 using Activout.RestClient.Helpers;
 using Activout.RestClient.Helpers.Implementation;
@@ -10,7 +9,6 @@ using Activout.RestClient.ParamConverter.Implementation;
 using Activout.RestClient.Serialization.Implementation;
 using BankIdDemo.Backend.Gateways;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using RichardSzalay.MockHttp;
@@ -73,20 +71,15 @@ public class BankIdGatewayTests
         const string expectedOrderRef = "order-123";
         const string expectedAutoStartToken = "auto-start-token-456";
 
-        var responseData = new ApiAuthResponse(
-            expectedOrderRef,
-            expectedAutoStartToken,
-            "qr-start-token",
-            "qr-start-secret"
-        );
-
         _mockHttp
             .When(HttpMethod.Post, $"{BaseUri}/auth")
             .WithContent($"{{\"endUserIp\":\"{endUserIp}\"}}")
-            .Respond("application/json", JsonConvert.SerializeObject(responseData, new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            }));
+            .Respond("application/json", $@"{{
+                ""orderRef"": ""{expectedOrderRef}"",
+                ""autoStartToken"": ""{expectedAutoStartToken}"",
+                ""qrStartToken"": ""qr-start-token"",
+                ""qrStartSecret"": ""qr-start-secret""
+            }}");
 
         var gateway = CreateBankIdGateway();
 
@@ -106,20 +99,15 @@ public class BankIdGatewayTests
         const string expectedOrderRef = "sign-order-789";
         const string expectedAutoStartToken = "sign-auto-start-token-101";
 
-        var responseData = new ApiAuthResponse(
-            expectedOrderRef,
-            expectedAutoStartToken,
-            "sign-qr-start-token",
-            "sign-qr-start-secret"
-        );
-
         _mockHttp
             .When(HttpMethod.Post, $"{BaseUri}/sign")
             .WithContent($"{{\"endUserIp\":\"{endUserIp}\"}}")
-            .Respond("application/json", JsonConvert.SerializeObject(responseData, new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            }));
+            .Respond("application/json", $@"{{
+                ""orderRef"": ""{expectedOrderRef}"",
+                ""autoStartToken"": ""{expectedAutoStartToken}"",
+                ""qrStartToken"": ""sign-qr-start-token"",
+                ""qrStartSecret"": ""sign-qr-start-secret""
+            }}");
 
         var gateway = CreateBankIdGateway();
 
@@ -170,29 +158,31 @@ public class BankIdGatewayTests
         // Arrange
         const string orderRef = "complete-order-456";
 
-        var completionData = new ApiCompletionData(
-            new ApiUser("198001011234", "Test Testsson", "Test", "Testsson"),
-            new ApiDevice("192.168.1.1", "unique-hardware-id"),
-            "2023-06-29",
-            new ApiStepUp(false),
-            "signature-data",
-            "ocsp-response"
-        );
-
-        var responseData = new ApiCollectResponse(
-            orderRef,
-            "complete",
-            null,
-            completionData
-        );
-
         _mockHttp
             .When(HttpMethod.Post, $"{BaseUri}/collect")
             .WithContent($"{{\"orderRef\":\"{orderRef}\"}}")
-            .Respond("application/json", JsonConvert.SerializeObject(responseData, new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            }));
+            .Respond("application/json", $@"{{
+                ""orderRef"": ""{orderRef}"",
+                ""status"": ""complete"",
+                ""completionData"": {{
+                    ""user"": {{
+                        ""personalNumber"": ""198001011234"",
+                        ""name"": ""Test Testsson"",
+                        ""givenName"": ""Test"",
+                        ""surname"": ""Testsson""
+                    }},
+                    ""device"": {{
+                        ""ipAddress"": ""192.168.1.1"",
+                        ""uhi"": ""unique-hardware-id""
+                    }},
+                    ""bankIdIssueDate"": ""2023-06-29"",
+                    ""stepUp"": {{
+                        ""mrtd"": false
+                    }},
+                    ""signature"": ""signature-data"",
+                    ""ocspResponse"": ""ocsp-response""
+                }}
+            }}");
 
         var gateway = CreateBankIdGateway();
 
@@ -223,20 +213,14 @@ public class BankIdGatewayTests
         // Arrange
         const string orderRef = "failed-order-789";
 
-        var responseData = new ApiCollectResponse(
-            orderRef,
-            "failed",
-            "userCallConfirm",
-            null
-        );
-
         _mockHttp
             .When(HttpMethod.Post, $"{BaseUri}/collect")
             .WithContent($"{{\"orderRef\":\"{orderRef}\"}}")
-            .Respond("application/json", JsonConvert.SerializeObject(responseData, new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            }));
+            .Respond("application/json", $@"{{
+                ""orderRef"": ""{orderRef}"",
+                ""status"": ""failed"",
+                ""hintCode"": ""userCallConfirm""
+            }}");
 
         var gateway = CreateBankIdGateway();
 
@@ -256,20 +240,14 @@ public class BankIdGatewayTests
         // Arrange
         const string orderRef = "unknown-status-order";
 
-        var responseData = new ApiCollectResponse(
-            orderRef,
-            "unknownStatus",
-            "unknownHintCode",
-            null
-        );
-
         _mockHttp
             .When(HttpMethod.Post, $"{BaseUri}/collect")
             .WithContent($"{{\"orderRef\":\"{orderRef}\"}}")
-            .Respond("application/json", JsonConvert.SerializeObject(responseData, new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            }));
+            .Respond("application/json", $@"{{
+                ""orderRef"": ""{orderRef}"",
+                ""status"": ""unknownStatus"",
+                ""hintCode"": ""unknownHintCode""
+            }}");
 
         var gateway = CreateBankIdGateway();
 
@@ -289,29 +267,28 @@ public class BankIdGatewayTests
         // Arrange
         const string orderRef = "null-stepup-order";
 
-        var completionData = new ApiCompletionData(
-            new ApiUser("198001011234", "Test Testsson", "Test", "Testsson"),
-            new ApiDevice("192.168.1.1", "unique-hardware-id"),
-            "2023-06-29",
-            null, // StepUp is null
-            "signature-data",
-            "ocsp-response"
-        );
-
-        var responseData = new ApiCollectResponse(
-            orderRef,
-            "complete",
-            null,
-            completionData
-        );
-
         _mockHttp
             .When(HttpMethod.Post, $"{BaseUri}/collect")
             .WithContent($"{{\"orderRef\":\"{orderRef}\"}}")
-            .Respond("application/json", JsonConvert.SerializeObject(responseData, new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            }));
+            .Respond("application/json", $@"{{
+                ""orderRef"": ""{orderRef}"",
+                ""status"": ""complete"",
+                ""completionData"": {{
+                    ""user"": {{
+                        ""personalNumber"": ""198001011234"",
+                        ""name"": ""Test Testsson"",
+                        ""givenName"": ""Test"",
+                        ""surname"": ""Testsson""
+                    }},
+                    ""device"": {{
+                        ""ipAddress"": ""192.168.1.1"",
+                        ""uhi"": ""unique-hardware-id""
+                    }},
+                    ""bankIdIssueDate"": ""2023-06-29"",
+                    ""signature"": ""signature-data"",
+                    ""ocspResponse"": ""ocsp-response""
+                }}
+            }}");
 
         var gateway = CreateBankIdGateway();
 
@@ -352,11 +329,265 @@ public class BankIdGatewayTests
             .When(HttpMethod.Post, $"{BaseUri}/cancel")
             .WithContent($"{{\"orderRef\":\"{orderRef}\"}}")
             .Respond(HttpStatusCode.BadRequest, "application/json", 
-                JsonConvert.SerializeObject(new BankIdErrorResponse("invalidParameters", "Order not found")));
+                @"{""errorCode"": ""invalidParameters"", ""details"": ""Order not found""}");
 
         var gateway = CreateBankIdGateway();
 
         // Act & Assert (should not throw, should ignore the exception)
         await gateway.Cancel(orderRef);
+    }
+
+    [Fact]
+    public async Task AuthThenCollectScenario_ShouldFollowCompleteWorkflow_WhenAuthSuccessful()
+    {
+        // Arrange
+        const string endUserIp = "192.168.1.10";
+        const string orderRef = "scenario-auth-order-123";
+        const string autoStartToken = "scenario-auto-start-token";
+
+        var gateway = CreateBankIdGateway();
+
+        // Mock auth response
+        _mockHttp
+            .When(HttpMethod.Post, $"{BaseUri}/auth")
+            .WithContent($"{{\"endUserIp\":\"{endUserIp}\"}}")
+            .Respond("application/json", $@"{{
+                ""orderRef"": ""{orderRef}"",
+                ""autoStartToken"": ""{autoStartToken}"",
+                ""qrStartToken"": ""scenario-qr-start-token"",
+                ""qrStartSecret"": ""scenario-qr-start-secret""
+            }}");
+
+        // Mock first collect response (pending)
+        _mockHttp
+            .When(HttpMethod.Post, $"{BaseUri}/collect")
+            .WithContent($"{{\"orderRef\":\"{orderRef}\"}}")
+            .Respond("application/json", $@"{{
+                ""orderRef"": ""{orderRef}"",
+                ""status"": ""pending"",
+                ""hintCode"": ""outstandingTransaction""
+            }}");
+
+        // Act
+        var authResult = await gateway.Auth(endUserIp);
+        var collectResult = await gateway.Collect(authResult.OrderRef);
+
+        // Assert
+        Assert.Equal(orderRef, authResult.OrderRef);
+        Assert.Equal(autoStartToken, authResult.AutoStartToken);
+        Assert.Equal(orderRef, collectResult.OrderRef);
+        Assert.Equal(BankIdStatus.Pending, collectResult.Status);
+        Assert.Equal(BankIdHintCode.OutstandingTransaction, collectResult.HintCode);
+        Assert.Null(collectResult.CompletionData);
+    }
+
+    [Fact]
+    public async Task AuthThenCollectToCompleteScenario_ShouldReturnCompletionData_WhenUserCompletes()
+    {
+        // Arrange - Create fresh mock for this scenario
+        var scenarioMock = new MockHttpMessageHandler();
+        const string endUserIp = "192.168.1.11";
+        const string orderRef = "scenario-auth-complete-456";
+        const string autoStartToken = "scenario-complete-token";
+
+        // Mock auth response
+        scenarioMock
+            .When(HttpMethod.Post, $"{BaseUri}/auth")
+            .WithContent($"{{\"endUserIp\":\"{endUserIp}\"}}")
+            .Respond("application/json", $@"{{
+                ""orderRef"": ""{orderRef}"",
+                ""autoStartToken"": ""{autoStartToken}"",
+                ""qrStartToken"": ""complete-qr-start-token"",
+                ""qrStartSecret"": ""complete-qr-start-secret""
+            }}");
+
+        // Mock first collect response (pending) 
+        scenarioMock
+            .When(HttpMethod.Post, $"{BaseUri}/collect")
+            .WithContent($"{{\"orderRef\":\"{orderRef}\"}}")
+            .Respond(
+                HttpStatusCode.OK,
+                "application/json", 
+                $@"{{
+                    ""orderRef"": ""{orderRef}"",
+                    ""status"": ""pending"",
+                    ""hintCode"": ""userMrtd""
+                }}")
+            .Respond(
+                HttpStatusCode.OK,
+                "application/json",
+                $@"{{
+                    ""orderRef"": ""{orderRef}"",
+                    ""status"": ""complete"",
+                    ""completionData"": {{
+                        ""user"": {{
+                            ""personalNumber"": ""199001011234"",
+                            ""name"": ""Jane Doe"",
+                            ""givenName"": ""Jane"",
+                            ""surname"": ""Doe""
+                        }},
+                        ""device"": {{
+                            ""ipAddress"": ""192.168.1.11"",
+                            ""uhi"": ""complete-hardware-id""
+                        }},
+                        ""bankIdIssueDate"": ""2024-01-15"",
+                        ""stepUp"": {{
+                            ""mrtd"": true
+                        }},
+                        ""signature"": ""complete-signature-data"",
+                        ""ocspResponse"": ""complete-ocsp-response""
+                    }}
+                }}");
+
+        // Create gateway with scenario-specific mock
+        var gateway = _restClientFactory
+            .CreateBuilder()
+            .With(new JsonDeserializer(new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                NullValueHandling = NullValueHandling.Ignore
+            }) { Order = -100 })
+            .With(new JsonSerializer(new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                NullValueHandling = NullValueHandling.Ignore
+            }) { Order = -100 })
+            .With(scenarioMock.ToHttpClient())
+            .BaseUri(new Uri(BaseUri))
+            .Build<IBankIdClient>();
+
+        var bankIdGateway = new BankIdGateway(gateway);
+
+        // Act
+        var authResult = await bankIdGateway.Auth(endUserIp);
+        var firstCollectResult = await bankIdGateway.Collect(authResult.OrderRef);
+        var secondCollectResult = await bankIdGateway.Collect(authResult.OrderRef);
+
+        // Assert
+        Assert.Equal(orderRef, authResult.OrderRef);
+        Assert.Equal(autoStartToken, authResult.AutoStartToken);
+        
+        // First collect - pending
+        Assert.Equal(orderRef, firstCollectResult.OrderRef);
+        Assert.Equal(BankIdStatus.Pending, firstCollectResult.Status);
+        Assert.Equal(BankIdHintCode.UserMrtd, firstCollectResult.HintCode);
+        Assert.Null(firstCollectResult.CompletionData);
+        
+        // Second collect - complete
+        Assert.Equal(orderRef, secondCollectResult.OrderRef);
+        Assert.Equal(BankIdStatus.Complete, secondCollectResult.Status);
+        Assert.Null(secondCollectResult.HintCode);
+        Assert.NotNull(secondCollectResult.CompletionData);
+        Assert.Equal("199001011234", secondCollectResult.CompletionData.User.PersonalNumber);
+        Assert.Equal("Jane Doe", secondCollectResult.CompletionData.User.Name);
+        Assert.Equal("Jane", secondCollectResult.CompletionData.User.GivenName);
+        Assert.Equal("Doe", secondCollectResult.CompletionData.User.Surname);
+        Assert.Equal("192.168.1.11", secondCollectResult.CompletionData.Device.IpAddress);
+        Assert.Equal("complete-hardware-id", secondCollectResult.CompletionData.Device.UniqueHardwareId);
+        Assert.Equal("2024-01-15", secondCollectResult.CompletionData.BankIdIssueDate);
+        Assert.NotNull(secondCollectResult.CompletionData.StepUp);
+        Assert.True(secondCollectResult.CompletionData.StepUp.Mrtd);
+        Assert.Equal("complete-signature-data", secondCollectResult.CompletionData.Signature);
+        Assert.Equal("complete-ocsp-response", secondCollectResult.CompletionData.OcspResponse);
+    }
+
+    [Fact]
+    public async Task SignThenCollectToFailedScenario_ShouldReturnFailedStatus_WhenUserCancels()
+    {
+        // Arrange
+        const string endUserIp = "192.168.1.12";
+        const string orderRef = "scenario-sign-failed-789";
+        const string autoStartToken = "scenario-failed-token";
+
+        // Create two separate gateway instances to avoid mock conflicts
+        var signGateway = CreateBankIdGateway();
+        var collectGateway = CreateBankIdGateway();
+
+        // Mock sign response
+        _mockHttp
+            .When(HttpMethod.Post, $"{BaseUri}/sign")
+            .WithContent($"{{\"endUserIp\":\"{endUserIp}\"}}")
+            .Respond("application/json", $@"{{
+                ""orderRef"": ""{orderRef}"",
+                ""autoStartToken"": ""{autoStartToken}"",
+                ""qrStartToken"": ""failed-qr-start-token"",
+                ""qrStartSecret"": ""failed-qr-start-secret""
+            }}");
+
+        // Mock collect response for failed transaction
+        _mockHttp
+            .When(HttpMethod.Post, $"{BaseUri}/collect")
+            .WithContent($"{{\"orderRef\":\"{orderRef}\"}}")
+            .Respond("application/json", $@"{{
+                ""orderRef"": ""{orderRef}"",
+                ""status"": ""failed"",
+                ""hintCode"": ""userCallConfirm""
+            }}");
+
+        // Act
+        var signResult = await signGateway.Sign(endUserIp);
+        var collectResult = await collectGateway.Collect(signResult.OrderRef);
+
+        // Assert
+        Assert.Equal(orderRef, signResult.OrderRef);
+        Assert.Equal(autoStartToken, signResult.AutoStartToken);
+        
+        // Collect - failed
+        Assert.Equal(orderRef, collectResult.OrderRef);
+        Assert.Equal(BankIdStatus.Failed, collectResult.Status);
+        Assert.Equal(BankIdHintCode.UserCallConfirm, collectResult.HintCode);
+        Assert.Null(collectResult.CompletionData);
+    }
+
+    [Fact]
+    public async Task AuthThenCancelScenario_ShouldCancelPendingTransaction_WhenRequested()
+    {
+        // Arrange
+        const string endUserIp = "192.168.1.13";
+        const string orderRef = "scenario-auth-cancel-101";
+        const string autoStartToken = "scenario-cancel-token";
+
+        var gateway = CreateBankIdGateway();
+
+        // Mock auth response
+        _mockHttp
+            .When(HttpMethod.Post, $"{BaseUri}/auth")
+            .WithContent($"{{\"endUserIp\":\"{endUserIp}\"}}")
+            .Respond("application/json", $@"{{
+                ""orderRef"": ""{orderRef}"",
+                ""autoStartToken"": ""{autoStartToken}"",
+                ""qrStartToken"": ""cancel-qr-start-token"",
+                ""qrStartSecret"": ""cancel-qr-start-secret""
+            }}");
+
+        // Mock collect response (pending)
+        _mockHttp
+            .When(HttpMethod.Post, $"{BaseUri}/collect")
+            .WithContent($"{{\"orderRef\":\"{orderRef}\"}}")
+            .Respond("application/json", $@"{{
+                ""orderRef"": ""{orderRef}"",
+                ""status"": ""pending"",
+                ""hintCode"": ""noClient""
+            }}");
+
+        // Mock cancel response
+        _mockHttp
+            .When(HttpMethod.Post, $"{BaseUri}/cancel")
+            .WithContent($"{{\"orderRef\":\"{orderRef}\"}}")
+            .Respond(HttpStatusCode.OK);
+
+        // Act
+        var authResult = await gateway.Auth(endUserIp);
+        var collectResult = await gateway.Collect(authResult.OrderRef);
+        // Act & Assert (should not throw)
+        await gateway.Cancel(authResult.OrderRef);
+
+        // Assert
+        Assert.Equal(orderRef, authResult.OrderRef);
+        Assert.Equal(autoStartToken, authResult.AutoStartToken);
+        Assert.Equal(orderRef, collectResult.OrderRef);
+        Assert.Equal(BankIdStatus.Pending, collectResult.Status);
+        Assert.Equal(BankIdHintCode.NoClient, collectResult.HintCode);
+        Assert.Null(collectResult.CompletionData);
     }
 }
