@@ -15,7 +15,7 @@
 
     <ItemGroup>
       <PackageReference Include="Activout.RestClient" Version="4.0.1" />
-      <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.4" />
+      <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.5" />
     </ItemGroup>
 
 </Project>
