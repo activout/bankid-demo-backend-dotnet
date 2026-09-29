@@ -30,7 +30,7 @@ builder.Services
         };
 
         var settings = services.GetRequiredService<IOptions<BankIdSettings>>().Value;
-        handler.ClientCertificates.Add(new X509Certificate2(
+        handler.ClientCertificates.Add(X509CertificateLoader.LoadPkcs12FromFile(
             settings.SslCertificatePath,
             settings.SslCertificatePassword));
         return handler;
