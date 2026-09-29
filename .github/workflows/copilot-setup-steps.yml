@@ -26,6 +26,6 @@ jobs:
     # If you do not check out your code, Copilot will do this for you.
     steps:
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: '10.x'

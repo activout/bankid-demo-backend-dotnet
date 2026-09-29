@@ -20,9 +20,9 @@ jobs:
         dotnet-version: [ '10.0.x' ]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Setup dotnet ${{ matrix.dotnet-version }}
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       id: stepid
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
