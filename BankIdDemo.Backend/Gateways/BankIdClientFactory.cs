@@ -1,9 +1,8 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Activout.RestClient;
-using Activout.RestClient.Serialization.Implementation;
+using Activout.RestClient.Json;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using JsonSerializer = Activout.RestClient.Serialization.Implementation.JsonSerializer;
 
 namespace BankIdDemo.Backend.Gateways;
 
@@ -12,21 +11,18 @@ public class BankIdClientFactory(
     IRestClientFactory restClientFactory,
     IOptions<BankIdSettings> bankIdSettings)
 {
-    private readonly BankIdSettings _settings = bankIdSettings.Value;
-
-    private readonly JsonSerializerSettings _jsonSerializerSettings = new()
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
-        Converters = SerializationManager.DefaultJsonConverters.ToList(),
-        ContractResolver = new CamelCasePropertyNamesContractResolver(),
-        NullValueHandling = NullValueHandling.Ignore
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
+
+    private readonly BankIdSettings _settings = bankIdSettings.Value;
 
     public IBankIdClient Create()
     {
         return restClientFactory
             .CreateBuilder()
-            .With(new JsonDeserializer(_jsonSerializerSettings) { Order = -100 })
-            .With(new JsonSerializer(_jsonSerializerSettings) { Order = -100 })
+            .WithSystemTextJson(JsonOptions)
             .With(httpClient)
             .BaseUri(new Uri(_settings.ApiUrl))
             .Build<IBankIdClient>();
